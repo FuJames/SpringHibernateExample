@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+   
+    <context:property-placeholder file-encoding="UTF-8" ignore-resource-not-found="true"
+                                  location="classpath:properties/config.properties"/>
+    <context:component-scan base-package="com.datayes.paas.authorization">
+    	<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+    <tx:annotation-driven/>
+	<!-- Configure Spring Data Source -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${jdbc.driverClassName}"></property>
+		<property name="url" value="${jdbc.url}"></property>
+		<property name="username" value="${jdbc.userName}"></property>
+		<property name="password" value="${jdbc.pwd}"></property>
+	</bean>
+	<!-- Configure Tomcat DBCP Data Source 
+	<bean id="dataSource_DBCP" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}"></property>
+		<property name="url" value="${jdbc.url}"></property>
+		<property name="username" value="${jdbc.userName}"></property>
+		<property name="password" value="${jdbc.pwd}"></property>
+	</bean>-->
+	<!-- Configure Hibernate Transaction -->
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager"
+          p:sessionFactory-ref="sessionFactory"/>
+	<!-- Configure Hibernate SessionFactory , Hibernate 在Spring中的使用，必须与Transaction一起使用，class要加上Transcational -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		 <property name="dataSource" ref="dataSource" />
+		 <property name="packagesToScan" value="com.datayes.paas.authorization.entity" />
+		 <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.autoReconnect">true</prop>
+            </props>
+        </property>
+	</bean>
+	<!-- Cache Configuration -->
+    <cache:annotation-driven cache-manager="cacheManager"/>
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+          p:cacheManager-ref="cacheManagerFactory"/><!-- <property name="cacheManager" ref="cacheManagerFactory" /> -->
+	    <bean id="cacheManagerFactory"
+          class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+          p:configLocation="classpath:EHCache/ehcache.xml"/>
+</beans>
